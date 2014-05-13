@@ -1,0 +1,21 @@
+Source: liblinz-geodetic-perl
+Section: perl
+Priority: optional
+Maintainer: Chris Crook <ccrook@linz.govt.nz>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.2
+Homepage: 
+#Vcs-Git: git://git.debian.org/collab-maint/liblinz-geodetic-perl.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/liblinz-geodetic-perl.git;a=summary
+
+Package: liblinz-geodetic-perl
+Architecture: all
+Depends: ${misc:Depends} libtime-modules-perl
+Description: Perl modules for LINZ geodetic coordinate system calculations
+ LINZ::Geodetic perl modules
+ .
+ Provides functions for reading LINZ coordinate system definitions from a
+ coordsys.def file and converting coordinates between different systems and 
+ different epochs.
+
+    

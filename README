@@ -1,0 +1,28 @@
+= LINZ Geodetic modules
+
+The Geodetic modules provide tools for converting between different coordinate
+systems in use in New Zealand.  The coordinate systems are loaded a coordinate
+system definition file, by default installed at a location defined by the 
+COORDSYSDEF environment variable.
+
+Copyright 2014 Crown copyright (c) Land Information New Zealand and the New
+Zealand Government.
+
+== Dependencies
+
+ * Perl 5.88 or greater, plus
+    - Time::JulianDay
+
+== Compatibility
+
+Tested on Windows XP and Server 2003, and Ubuntu 10.4 (Lucid)
+
+== Install
+
+This is a pure perl implementation of coordinate conversions.  Installation
+uses the Module::Build process listed below. 
+
+-- Simple install
+
+    perl Build.PL
+    ./Build install	
