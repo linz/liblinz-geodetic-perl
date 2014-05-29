@@ -36,6 +36,8 @@ use strict;
 
 package LINZ::Geodetic::DefModelTransform;
 
+our $AUTOLOAD;
+
 #===============================================================================
 #
 #   Method:       new
@@ -67,6 +69,15 @@ sub new {
     };
   return bless $self, $class;
   }
+
+sub AUTOLOAD
+{
+    my($self)=@_;
+    my $function=$AUTOLOAD;
+    $function=~ s/.*:://;
+    $self->InstallModel() if ! $self->{model};
+    return eval "\$self->{model}->$function(\@_)";
+}
 
 
 #===============================================================================

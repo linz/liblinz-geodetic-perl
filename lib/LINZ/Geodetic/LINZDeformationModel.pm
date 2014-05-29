@@ -29,6 +29,7 @@ use FileHandle;
 package LINZ::Geodetic::LINZDeformationModel;
 
 use vars qw/$debug/;
+use vars qw/$AUTOLOAD/;
 
 $debug = 0;
 
@@ -58,7 +59,7 @@ sub new {
    my $self = {
        filename=>$filename,
        fh=>$fh,
-       titles=>["Triangle mesh data from file $filename"],
+       titles=>["Undefined deformation model"],
        crdsyscode=>'NONE'
        };
 
@@ -68,6 +69,17 @@ sub new {
 
    return $self;
    }
+
+# Access file parameter
+
+sub AUTOLOAD
+{
+    my ($self)=@_;
+    my $function=$AUTOLOAD;
+    $function =~ s/.*:://;
+    return $self->{$function} if exists $self->{$function};
+    return '';
+}
 
 # Default set up for a LINZ triangle file
 
