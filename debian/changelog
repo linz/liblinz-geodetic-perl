@@ -1,3 +1,9 @@
+liblinz-geodetic-perl (2.2.0-1) precise; urgency=low
+
+  * Adding selection of meridional circuits based on lon/lat
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Mon, 09 Jun 2014 14:02:34 +1200
+
 liblinz-geodetic-perl (2.1.0-1) precise; urgency=low
 
   * Added reporting of deformation model version
