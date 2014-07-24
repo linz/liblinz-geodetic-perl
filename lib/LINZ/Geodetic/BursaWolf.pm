@@ -103,6 +103,24 @@ sub new {
   return bless $self, $class;
   }
 
+#===============================================================================
+#
+#   Method:       needepoch
+#
+#   Description:  $bw->NeedEpoch()
+#                 Returns true if the conversion needs an epoch
+#
+#   Parameters:   $epoch   The epoch for the transformation parameters (years)
+#
+#   Returns:      
+#
+#===============================================================================
+
+sub needepoch
+{
+    my($self)=@_;
+    return $self->{needepoch};
+}
 
 #===============================================================================
 #

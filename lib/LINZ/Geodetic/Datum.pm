@@ -109,5 +109,6 @@ sub baseref { return $_[0]->{baseref}}
 sub transfunc { return $_[0]->{transfunc}}
 sub defmodel { return $_[0]->{defmodel} }
 sub refepoch { return $_[0]->{refepoch} }
+sub needepoch { return defined($_[0]->{defmodel}) }
 
 1;

@@ -288,6 +288,7 @@ sub conversionto
 
     my $src_datum = $self->datum;
     my $tar_datum = $target->datum;
+    my $needepoch = 0;
 
     # Find a conversion from the source datum to the target datum
     # Each datum has a baseref which is either another datum or a string defining a base
