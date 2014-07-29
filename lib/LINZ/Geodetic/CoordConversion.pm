@@ -61,8 +61,8 @@ package LINZ::Geodetic::CoordConversion;
 #===============================================================================
 
 sub new {
-  my( $class, $from, $to, $funcref, $conversion_epoch ) = @_;
-  my $self = [$from, $to, $funcref, $conversion_epoch];
+  my( $class, $from, $to, $funcref, $conversion_epoch, $needepoch ) = @_;
+  my $self = [$from, $to, $funcref, $conversion_epoch, $needepoch];
   return bless $self, $class;
   }
 
@@ -87,7 +87,7 @@ sub convert {
   my $self=shift;
   my $in_crd=shift;
   my $target_epoch=shift;
-  my $out_crd = $self->[2]->($in_crd, $target_epoch);
+  my $out_crd = $self->[2]->($self, $in_crd, $target_epoch);
   $out_crd->setepoch($target_epoch) if $target_epoch;
   return $out_crd->setcs($self->[1]) if $out_crd;
   }
@@ -130,7 +130,7 @@ sub to {
 
 #===============================================================================
 #
-#   Subroutine:   to
+#   Subroutine:   conversion_epoch
 #
 #   Description:   $epoch = $conv->conversion_epoch
 #                  Returns the epoch for transformations between reference
@@ -144,6 +144,22 @@ sub to {
 
 sub conversion_epoch {
   return $_[0]->[3];
+  }
+
+#===============================================================================
+#
+#   Method:       needepoch
+#
+#   Description:  $epoch = $conv->needepoch
+#
+#                 Returns true if the conversion requires a coordinate epoch for
+#                 conversion.
+#
+#===============================================================================
+
+sub needepoch {
+  my( $self )=@_;
+  return $self->[4];
   }
 
 1;

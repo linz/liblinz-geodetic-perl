@@ -284,7 +284,7 @@ sub conversionto
 {
     my ( $self, $target, $conversion_epoch ) = @_;
     my $result = $self->{_conv}->{ $target->{csid} };
-    return $result if $result && $result->conversion_epoch == $conversion_epoch;
+    return $result if $result && (! $result->needepoch || $result->conversion_epoch == $conversion_epoch);
 
     my $src_datum = $self->datum;
     my $tar_datum = $target->datum;
@@ -345,11 +345,12 @@ sub conversionto
     die "Cannot convert " . $self->name . " to " . $target->name . "\n"
       if ! $matched;
 
-    my $def = 'sub {';
+    my $def = 'sub { my ($conv,$crd,$tgtepoch)=@_; ';
     $def .=
-      'my $crd = ref($_[0]) !~ /Geodetic/ ?  bless [@{$_[0]}], ref($_[0]) : $self->coord(@_);';
+       '$crd = ref($crd) =~ /LINZ::Geodetic/ ?  bless [@$crd], ref($crd) : $conv->from->coord($crd);';
 
-    $def .= '$crd->setepoch($conversion_epoch) if ! $crd->epoch; ';
+    $def .= '$crd->setepoch($tgtepoch) if ! $crd->epoch; ';
+    $def .= '$crd->setepoch($conv->conversion_epoch) if ! $crd->epoch; ';
 
     my $type = $self->{type};
     
@@ -375,16 +376,20 @@ sub conversionto
             }
                 if ( $src_defmodel && $ndtmfwd > 0 )
                 {
+                    $needepoch=1;
                     $def .= '$crd = $src_defmodel->ApplyTo($crd);';
                 }
             for my $ndtm (0..$#$dtmtrans)
             {
                 my $func=$ndtm < $ndtmfwd ? 'ApplyTo' : 'ApplyInverseTo';
+                my $transfunc=$dtmtrans->[$ndtm]->transfunc;
+                $needepoch ||= $transfunc->needepoch;
                 $def .= "\$crd = \$dtmtrans->[$ndtm]->transfunc->$func(\$crd);";
             }
 
                 if ( $tar_defmodel && $ndtmfwd < scalar(@$dtmtrans))
                 {
+                    $needepoch=1;
                     $def .= '$crd = $tar_defmodel->ApplyInverseTo($crd);';
                 }
             }
@@ -428,7 +433,7 @@ sub conversionto
     #    print $tmpf $def;
     #    close($tmpf);
 
-    $result = new LINZ::Geodetic::CoordConversion( $self, $target, eval $def, $conversion_epoch );
+    $result = new LINZ::Geodetic::CoordConversion( $self, $target, eval $def, $conversion_epoch, $needepoch );
 
     # Store the result indexed by the target coordinate system id to
     # avoid having to recalculate when requested again.

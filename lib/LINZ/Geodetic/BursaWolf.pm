@@ -107,12 +107,10 @@ sub new {
 #
 #   Method:       needepoch
 #
-#   Description:  $bw->NeedEpoch()
+#   Description:  $bw->needepoch()
 #                 Returns true if the conversion needs an epoch
 #
-#   Parameters:   $epoch   The epoch for the transformation parameters (years)
-#
-#   Returns:      
+#   Returns:      true if an epoch is needed
 #
 #===============================================================================
 
