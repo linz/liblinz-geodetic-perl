@@ -1,3 +1,10 @@
+liblinz-geodetic-perl (2.3.0-1) precise; urgency=low
+
+  * Adding Polar Stereographic projection
+  * Adding functions for testing whether need epoch, and improving handling of epoch in conversions
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Fri, 01 Aug 2014 09:39:32 +1200
+
 liblinz-geodetic-perl (2.2.0-1) precise; urgency=low
 
   * Adding selection of meridional circuits based on lon/lat
