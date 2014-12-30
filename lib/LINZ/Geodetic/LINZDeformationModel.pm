@@ -132,6 +132,20 @@ sub Setup {
    my $range = LINZ::Geodetic::LINZDeformationModel::Range->read($unpacker);
    my $isgeog = $unpacker->read_short;
    my $nseq = $unpacker->read_short;
+
+   if( $debug )
+   {
+        print "Loading LINZ deformation model\n";
+        print "    name=$name\n";
+        print "    version=$version\n";
+        print "    crdsyscode=$crdsyscode\n";
+        print "    description=$description\n";
+        print "    versiondate=$versiondate->{years}\n";
+        print "    startdate=$startdate->{years}\n";
+        print "    enddate=$enddate->{years}\n";
+        printf "    range=%s\n",$range->tostring;
+        print "    isgeog=$isgeog\n";
+   }
    
    my @sequences = ();
    for my $iseq (1..$nseq) {
@@ -163,10 +177,23 @@ sub Calc {
 
    my @components;
    foreach my $s (@{$self->{sequences}} ) {
-      if( $debug ) {
-         print "Evaluating sequence ",$s->{seqid},"\n";
+      my @seqcomp=$s->CalcComponents($date,$x,$y);
+      if( $debug )
+      {
+         my $name=$s->{name};
+         $name =~ s/\s+//g;
+         $name = substr($name,0,40);
+         print "Evaluating sequence ",$s->{seqid}," $name\n";
+         foreach my $c (@seqcomp)
+         {
+             my $desc=$c->[0]->{description};
+             my $factor=$c->[1];
+             $desc =~ s/\s+/ /g;
+             $desc = substr($desc,0,40);
+             print "   $factor * $desc\n";
          }
-      push(@components,$s->CalcComponents($date,$x,$y));
+      }
+      push(@components,@seqcomp);
       }
 
 
@@ -175,6 +202,7 @@ sub Calc {
    my @def = (0,0,0);
    foreach my $cv (@components) {
       my ($c,$mult,$zerobeyond,$ndim) = @$cv;
+      next if $mult == 0;
       eval {
         my @cdef = $c->Calc( $x, $y );
         if( $ndim == 1 ) {
@@ -246,11 +274,11 @@ sub read {
    my ($isvelocity,$isnested)=(0,0);
    if( $format_version == '1')
    {
-       $isvelocity=$unpacker->read_short(1);
+       $isvelocity=$unpacker->read_short;
    }
    else
    {
-       $isnested=$unpacker->read_short(1);
+       $isnested=$unpacker->read_short;
    }
 
    my ($dimension,$zerobeyond,$ncomponents) = $unpacker->read_short(3);
@@ -270,6 +298,23 @@ sub read {
       components => \@components,
       }, $class;
 
+   if( $LINZ::Geodetic::LINZDeformationModel::debug )
+   {
+        my $dsc=$description;
+        $dsc =~ s/\s*$//;
+        $dsc =~ s/\s+/ /;
+        print "Loading sequence:\n";
+        print "    name=$name\n";
+        print "    description=$dsc\n";
+        printf "    startdate=%.3f\n",$startdate->{years};
+        printf "    enddate=%.3f\n",$enddate->{years};
+        printf "    range=%s\n",$range->tostring;
+        print "    dimension=$dimension\n";
+        print "    isvelocity=$isvelocity\n";
+        print "    isnested=$isnested\n";
+        print "    zerobeyond=$zerobeyond\n";
+   };
+
    for my $icomp (1..$ncomponents) {
       my $c = LINZ::Geodetic::LINZDeformationModel::Component->read($format_version,$self,$fh,$unpacker);
       if( $c->{istrig} && $isnested )
@@ -282,6 +327,7 @@ sub read {
 
    # Fix up version 1 time model which interpolate between components.
    # Note: This doesn't handle first and last components extrapolating.
+
    if( $format_version == 1 )
    {
       foreach my $i (1..$ncomponents-1)
@@ -298,6 +344,29 @@ sub read {
    
           }
       }
+   }
+
+   if( $LINZ::Geodetic::LINZDeformationModel::debug )
+   {
+       foreach my $c (@components)
+       {
+           my $dsc=$c->{description};
+           $dsc =~ s/\s+/ /;
+           $dsc =~ s/\s*$//;
+           print "    Component:\n";
+           print "      description=$dsc\n";
+           printf "      refdate=%.3f\n",$c->{refdate}->{years};
+           printf "      range=%s\n",$c->{range}->tostring;
+           print "      usebefore=$c->{usebefore}\n";
+           print "      useafter=$c->{useafter}\n";
+           print "      istrig=$c->{istrig}\n";
+           print "      fileloc=$c->{fileloc}\n";
+           print "      factor0=$c->{factor0}\n";
+           foreach my $t (@{$c->{timemodel}})
+           {
+               printf "        time %.3f factor %.4f\n",$t->[0],$t->[1];
+           }
+       }
    }
    
    return $self;
@@ -342,7 +411,7 @@ sub CalcComponents {
            }
        }
        push( @results,[$c,$factor,$c->{zerobeyond},$c->{dimension}] );
-       last if $self->{nested};
+       last if $self->{isnested};
    }
    return @results;
    }
@@ -353,7 +422,7 @@ sub CalcComponents {
 package LINZ::Geodetic::LINZDeformationModel::Component;
 
 sub read {
-   my( $class,$sequence,$format_version,$fh,$unpacker ) = @_;
+   my( $class,$format_version,$sequence,$fh,$unpacker ) = @_;
    my $description = $unpacker->read_string;
    my $refdate = &LINZ::Geodetic::LINZDeformationModel::ReadDate($unpacker);
    my $range = LINZ::Geodetic::LINZDeformationModel::Range->read($unpacker);
@@ -365,7 +434,7 @@ sub read {
        # Convert version 1 time model to version 2 equivalent (partly here,
        # partly in Sequence.read, as need to take account of interpolation between
        # components.
-      ($usebefore,$useafter) = $unpacker->read_short;
+      ($usebefore,$useafter) = $unpacker->read_short(2);
       if( $sequence->{isvelocity} )
       {
           my $year=$sequence->{startdate}->{years};
@@ -389,7 +458,7 @@ sub read {
    else
    {
        my $tmtype=$unpacker->read_short;
-       die "Invalid time model type: can only use piecewise linear time model\n" if $tmtype != 1;
+       die "Invalid time model type $tmtype: can only use piecewise linear time model\n" if $tmtype != 1;
        my $ntimemodel=$unpacker->read_short;
        $factor0=$unpacker->read_double;
        while( $ntimemodel-- > 0 )
@@ -399,7 +468,7 @@ sub read {
            push(@timemodel,[$tmdate->{years},$tmvalue]);
        }
    }
-   my $istrig = $unpacker->read_short(1);
+   my $istrig = $unpacker->read_short;
    my $fileloc = $unpacker->read_long;
    
    my $self = {
@@ -463,5 +532,11 @@ sub Includes {
    return $y >= $self->[0] && $y <= $self->[1] &&
           $x >= $self->[2] && $x <= $self->[3];
    }
+
+sub tostring
+{
+    my( $self ) = @_;
+    return sprintf("%.5f,%.5f,%.5f,%.5f",@$self);
+}
  
 1;
