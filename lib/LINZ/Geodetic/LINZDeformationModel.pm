@@ -272,16 +272,10 @@ sub read {
    my $enddate = &LINZ::Geodetic::LINZDeformationModel::ReadDate($unpacker);
    my $range = LINZ::Geodetic::LINZDeformationModel::Range->read($unpacker);
    my ($isvelocity,$isnested)=(0,0);
-   if( $format_version == '1')
-   {
-       $isvelocity=$unpacker->read_short;
-   }
-   else
-   {
-       $isnested=$unpacker->read_short;
-   }
-
-   my ($dimension,$zerobeyond,$ncomponents) = $unpacker->read_short(3);
+   $isvelocity=$unpacker->read_short if $format_version == 1;
+   my ($dimension,$zerobeyond) = $unpacker->read_short(2);
+   $isnested=$unpacker->read_short if $format_version > 1;
+   my $ncomponents = $unpacker->read_short;
   
    my @components = ();
    
@@ -393,14 +387,14 @@ sub CalcComponents {
    {
        next if ! $c->{range}->Includes( $x, $y );
 
-       my $factor=$self->{factor0};
+       my $factor=$c->{factor0};
        my $tm=$c->{timemodel};
        if( @$tm && $date > $tm->[0]->[0] )
        {
            $factor=$tm->[-1]->[1];
            foreach my $i (1 .. $#$tm)
            {
-               if( $date <= $tm->[$i] )
+               if( $date <= $tm->[$i]->[0] )
                {
                    my $y0=$tm->[$i-1]->[0];
                    my $f0=$tm->[$i-1]->[1];
@@ -410,7 +404,7 @@ sub CalcComponents {
                }
            }
        }
-       push( @results,[$c,$factor,$c->{zerobeyond},$c->{dimension}] );
+       push( @results,[$c,$factor,$c->{zerobeyond},$self->{dimension}] );
        last if $self->{isnested};
    }
    return @results;
