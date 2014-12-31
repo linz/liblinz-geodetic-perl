@@ -1,3 +1,11 @@
+liblinz-geodetic-perl (2.4.0-1) trusty; urgency=medium
+
+  * Version 2 binary format deformation model - WIP
+  * Better debugging output
+  * Fixing error in handling dimension of patch deformation
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Thu, 01 Jan 2015 07:08:19 +1300
+
 liblinz-geodetic-perl (2.3.0-1) precise; urgency=low
 
   * Adding Polar Stereographic projection
