@@ -389,7 +389,7 @@ sub datum
                          (\w+)
                          (?:
                          \s+
-                         (?:(iers)\s+)?
+                         (?:(iers|iers_tsr|iers_etsr\s+\d{4}(?:\.\d*)?)\s+)?
                          ([+-]?\d+\.?\d*)\s+
                          ([+-]?\d+\.?\d*)\s+
                          ([+-]?\d+\.?\d*)\s+
@@ -399,8 +399,9 @@ sub datum
                          ([+-]?\d+\.?\d*)
                          (?:
                          \s+
-                         rates
+                         (?:rates
                          \s+(\d{4}(?:\.\d*)?)\s+
+                         )?
                          ([+-]?\d+\.?\d*)\s+
                          ([+-]?\d+\.?\d*)\s+
                          ([+-]?\d+\.?\d*)\s+
@@ -475,9 +476,15 @@ sub datum
     require LINZ::Geodetic::Datum;
     require LINZ::Geodetic::BursaWolf;
     my $ellipsoid = $self->ellipsoid($ellcode);
+    if( $iers =~ /tsr/i)
+    {
+        my $tmp=$sf; $sf=$rx; $rx=$ry; $ry=$rz; $rz=$tmp;
+        my $dtmp=$dsf; $dsf=$drx; $drx=$dry; $dry=$drz; $drz=$dtmp;
+    }
+    $refy=$1 if $iers =~ /\s(\d{4}(?:\.\d*))?/;
     my $transfunc =
       new LINZ::Geodetic::BursaWolf( $tx, $ty, $tz, $rx, $ry, $rz, $sf, $refy, $dtx,
-        $dty, $dtz, $drx, $dry, $drz, $dsf, $iers eq 'IERS' );
+        $dty, $dtz, $drx, $dry, $drz, $dsf, $iers ne '' );
 
     my $defmodel;
     my $filepath = '';
