@@ -1,3 +1,9 @@
+liblinz-geodetic-perl (2.5.0-1) trusty; urgency=medium
+
+  * Added IERS format for reference frame definition
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Fri, 01 May 2015 14:34:02 +1200
+
 liblinz-geodetic-perl (2.4.0-1) trusty; urgency=medium
 
   * Version 2 binary format deformation model - WIP
