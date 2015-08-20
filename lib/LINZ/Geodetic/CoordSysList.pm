@@ -103,6 +103,12 @@ our @PossibleCoordSysDef=(
 
 our $_cslist=undef;
 
+sub coalesce
+{
+    my( $value, $default ) = @_;
+    return defined($value) ? $value : $default;
+}
+
 #===============================================================================
 #  Function:    GetCoordSys
 #
@@ -455,22 +461,22 @@ sub datum
         $euler,   $eulerepoch, $eulerplon,   $eulerplat, $eulerrate
       )
       = (
-        $1,        $2,        uc($3 // ''),    uc($4 // ''),    
-        $5 // 0.0  + 0.0,  $6  // 0.0 + 0.0, $7 // 0.0 + 0.0,  
-        $8 // 0.0 + 0.0,  $9 // 0.0 + 0.0,  $10 // 0.0 + 0.0, 
-        $11 // 0.0 + 0.0, 
-        $12 // '',
-        $13 // 0.0 + 0.0, $14 // 0.0 + 0.0, $15 // 0.0 + 0.0, 
-        $16 // 0.0 + 0.0, $17 // 0.0 + 0.0, $18 // 0.0 + 0.0,
-        $19 // 0.0 + 0.0, 
-        uc($20 // ''),   $21 // '',       $22 // '',       
-        uc($23 // ''),   $24 // '',       $25 // '',       
-        uc($26 // ''),   $27 // '',       
-        uc($28 // ''),   $29 // '',       
-        $30 // 0.0 + 0.0,        $31 // 0.0 + 0.0,       $32 // 0.0 + 0.0,       
-        $33 // 0.0 + 0.0,       $34 // 0.0 + 0.0,       $35 // 0.0 + 0.0,       
-        $36 // 0.0 + 0.0,
-        uc($37 // ''),   $38 // '', $39 // 0.0 + 0.0, $40 // 0.0 + 0.0, $41 // 0.0 + 0.0
+        $1,        $2,        uc(coalesce($3,'')),    uc(coalesce($4,'')),    
+        coalesce($5,0.0)  + 0.0,  coalesce($6,0.0) + 0.0, coalesce($7,0.0) + 0.0,  
+        coalesce($8,0.0) + 0.0,  coalesce($9,0.0) + 0.0,  coalesce($10,0.0) + 0.0, 
+        coalesce($11,0.0) + 0.0, 
+        coalesce($12,''),
+        coalesce($13,0.0) + 0.0, coalesce($14,0.0) + 0.0, coalesce($15,0.0) + 0.0, 
+        coalesce($16,0.0) + 0.0, coalesce($17,0.0) + 0.0, coalesce($18,0.0) + 0.0,
+        coalesce($19,0.0) + 0.0, 
+        uc(coalesce($20,'')),   coalesce($21,''),       coalesce($22,''),       
+        uc(coalesce($23,'')),   coalesce($24,''),       coalesce($25,''),       
+        uc(coalesce($26,'')),   coalesce($27,''),       
+        uc(coalesce($28,'')),   coalesce($29,''),       
+        coalesce($30,0.0) + 0.0,        coalesce($31,0.0) + 0.0,       coalesce($32,0.0) + 0.0,       
+        coalesce($33,0.0) + 0.0,       coalesce($34,0.0) + 0.0,       coalesce($35,0.0) + 0.0,       
+        coalesce($36,0.0) + 0.0,
+        uc(coalesce($37,'')),   coalesce($38,''), coalesce($39,0.0) + 0.0, coalesce($40,0.0) + 0.0, coalesce($41,0.0) + 0.0
       );
 
     require LINZ::Geodetic::Datum;
@@ -608,7 +614,7 @@ sub coordsys
                         /xi;
 
         my ( $name, $dtmcode, $type, $projdef ) =
-          ( $1, uc($2 // ''), $cstype{ uc($3 // '') }, $4 );
+          ( $1, uc(coalesce($2,'')), $cstype{ uc(coalesce($3,'')) }, $4 );
         my $dtm = $self->datum( $dtmcode, $refepoch );
         my $proj;
         if ( $projdef ne '' )
