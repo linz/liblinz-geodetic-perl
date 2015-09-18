@@ -56,7 +56,7 @@ use strict;
 #                  $projcrd = $proj->proj( $projcrd );
 #
 #                Also implements the internal routine
-#                $proj->install which converts the projection
+#                $proj->installed which converts the projection
 #                definition to a real projection by installing
 #                the package and instantiating the object.
 #
@@ -80,14 +80,14 @@ package LINZ::Geodetic::Projection;
 
 sub new {
    my ($class, $def, $ellipsoid ) = @_;
-   my $self = { def=>$def, ellipsoid=>$ellipsoid };
+   my $self = { def=>$def, ellipsoid=>$ellipsoid, installed=>0 };
    return bless $self, $class;
    }
 
 
 #===============================================================================
 #
-#   Subroutine:   install
+#   Subroutine:   installed
 #
 #   Description:  Installs the projection object by 'require'ing the 
 #                 the corresponding package and instantiating an object.
@@ -101,8 +101,10 @@ sub new {
 #
 #===============================================================================
 
-sub install {
+sub installed {
    my $self = shift;
+   return $self if $self->{installed};
+   $self->{installed}=1;
    my $def = $self->{def};
    my $range;
    if( $def =~ /\s*RANGE\s*/ ) {
@@ -114,6 +116,7 @@ sub install {
    
    eval 'require LINZ::Geodetic::'.$type.'Projection';
    die "Invalid projection code $type\n" if $@;
+   $self->{typecode}=$type;
 
    my $elp = $self->{ellipsoid};
    my $proj = eval 'new LINZ::Geodetic::'.$type.'Projection($elp,@def)';
@@ -139,12 +142,14 @@ sub install {
         }
      ($lnmin,$lnmax) = (sort {$a<=>$b} ($ln1, $ln2, $ln3, $ln4 ))[0,3];
      my ($ltmin,$ltmax) = (sort {$a<=>$b} ($lt1, $lt2, $lt3, $lt4 ))[0,3];
+     $self->{projrange}={emin=>$emin,emax=>$emax,nmin=>$nmin,nmax=>$nmax};
      $self->{testprojcrd} = 
           sub { my $crd = $_[0];
                 ($crd->[0] >= $nmin && $crd->[0] <= $nmax &&
                  $crd->[1] >= $emin && $crd->[1] <= $emax ) ||
                  die "Projection coordinates out of valid range\n";
                };
+     $self->{geogrange}={emin=>$lnmin,emax=>$lnmax,nmin=>$ltmin,nmax=>$ltmax};
      $self->{testgeogcrd} = 
           sub { my $crd = $_[0];
                 my $ln = $crd->[1];
@@ -156,6 +161,7 @@ sub install {
                };
                
      }
+   return $self;
    }
 
 
@@ -174,8 +180,27 @@ sub install {
 
 sub type {
    my $self = shift;
-   $self->{proj} || $self->install;
-   return $self->{proj}->type(@_);
+   return $self->projimp->type;
+   }
+
+sub typecode {
+   my $self = shift;
+   return $self->installed->{typecode};
+   }
+
+sub proj_range {
+   my $self = shift;
+   return $self->installed->{projrange};
+   }
+
+sub geog_range {
+   my $self = shift;
+   return $self->installed->{geogrange};
+   }
+
+sub projimp {
+   my $self = shift;
+   return $self->installed->{proj};
    }
 
 
@@ -195,9 +220,9 @@ sub type {
 
 sub parameters {
    my $self = shift;
-   $self->{proj} || $self->install;
+   my $projimp=$self->projimp;
    my $params;
-   eval {$params = $self->{proj}->parameters};
+   eval {$params = $projimp->parameters};
    return $params;
    }
 

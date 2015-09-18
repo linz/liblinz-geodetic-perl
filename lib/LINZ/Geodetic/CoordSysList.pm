@@ -91,6 +91,7 @@ require LINZ::Geodetic;
 my %cstype = (
     GEODETIC   => &LINZ::Geodetic::GEODETIC,
     CARTESIAN  => &LINZ::Geodetic::CARTESIAN,
+    GEOCENTRIC  => &LINZ::Geodetic::CARTESIAN,
     PROJECTION => &LINZ::Geodetic::PROJECTION
 );
 
@@ -294,12 +295,12 @@ sub newFromCoordSysDef
 #
 #   Method:       definitions
 #
-#   Description:  ($elldef,$dtmdef,$csdef) = $cslist->definitions;
+#   Description:  ($elldef,$dtmdef,$csdef,$hrdef,$hcsdef) = $cslist->definitions;
 #
 #   Parameters:   None
 #
-#   Returns:      Returns three hash references containing the coordinate
-#                 system definition strings.
+#   Returns:      Returns five hash references containing the coordinate
+#                 system definition strings
 #
 #===============================================================================
 
