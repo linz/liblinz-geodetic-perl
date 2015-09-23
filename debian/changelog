@@ -1,3 +1,9 @@
+liblinz-geodetic-perl (2.6.1-1) trusty; urgency=medium
+
+  * Bug fix
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Thu, 24 Sep 2015 06:03:18 +1200
+
 liblinz-geodetic-perl (2.6.0-1) trusty; urgency=medium
 
   * Improving access to projection information
