@@ -243,7 +243,7 @@ sub parameters {
 sub geodetic { return geog(@_); }
 sub geog {
    my $self = shift;
-   $self->{proj} || $self->install;
+   $self->{proj} || $self->installed;
    &{$self->{testprojcrd}}(@_) if exists $self->{testprojcrd};
    return $self->{proj}->geog(@_);
    }
@@ -265,7 +265,7 @@ sub geog {
 sub projection { return proj(@_); }
 sub proj {
    my $self = shift;
-   $self->{proj} || $self->install;
+   $self->{proj} || $self->installed;
    &{$self->{testgeogcrd}}(@_) if exists $self->{testgeogcrd};
    return $self->{proj}->proj(@_);
    }
@@ -287,7 +287,7 @@ sub proj {
 
 sub sf_conv {
    my $self = shift;
-   $self->{proj} || $self->install;
+   $self->{proj} || $self->installed;
    &{$self->{testprojcrd}}(@_) if exists $self->{testprojcrd};
    my $result;
    eval {
