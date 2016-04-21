@@ -1,3 +1,9 @@
+liblinz-geodetic-perl (2.7.0-1) trusty; urgency=medium
+
+  * Adding simplistic grid format conversion
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Thu, 21 Apr 2016 15:32:48 +1200
+
 liblinz-geodetic-perl (2.6.1-1) trusty; urgency=medium
 
   * Bug fix
