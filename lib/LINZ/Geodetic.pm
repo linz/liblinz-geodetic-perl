@@ -141,6 +141,9 @@ LINZ::Geodetic - modules for geodetic calculations
 
     my $coord = $cs->coord($ord1,$ord2,$ord3);
     my $conv = $cs->conversionto($newcs);
+    # For conversions requiring an epoch (eg ITRF to NZGD2000)
+    # Epoch is defined in decimal years
+    my $conv = $cs->conversionto($newcs,$epoch);
     my $cs = $conv->from;
     my $newcs = $conv->to;
     my $crd = $conv->convert([$ord1,$ord2,$ord3]); # I think!
@@ -150,7 +153,9 @@ LINZ::Geodetic - modules for geodetic calculations
     $coord->setcs($cs); # Define the coordinate system of existing coords
     my $crdcs = $coord->coordsys(); # Retrieve coordinate system
     my $crdtm = $coord->as($newcs); # Transform to different coord system
-
+    my $crdtm = $coord->as($newcs,$epoch); # Transformation at specified epoch
+    $crd->setepoch($epoch);   # Set the coordinate epoch in decimal years
+    $crd->epoch;
 
     # For lat/lon coords
 
@@ -176,6 +181,15 @@ LINZ::Geodetic - modules for geodetic calculations
     my $string = $coord->asstring($ndp); # ndp = no decimal places
     my($x,$y,$z) = ($coord->X, $coord->Y, $coord->Z );
 
+    # Height reference surfaces defined by transformation from ellipsoidal heights
+    # In a reference coordinate system.  Note: the use of "orthometric"
+    # here is not technically correct!  These are ellipsoidal heights 
+    # calculated relative to a gridded reference surface.
+    
+    my $href=$cslist->hgtref($hgtrefcode);
+    my $hrefname=$cslist->hgtrefname($hgtrefcode);
+    my $ohgt=$href->get_orthometric_height($crd);
+    $href->set_ellipsoidal_height($crd,$ohgt);
+    $href->convert_orthometric_height($hrefnew,$crd,$ohgt);
 
-    # Also undocumented stuff about heights!
 

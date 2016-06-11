@@ -40,16 +40,17 @@ use LINZ::Geodetic::Util::GridFile;
 #
 #   Method:       new
 #
-#   Description:  $gg = new LINZ::Geodetic::GeoidGrid($gridname)
+#   Description:  $gg = new LINZ::Geodetic::GeoidGrid($gridname,$factor)
 #
 #   Parameters:   $gridname    The name of the geoid grid file
+#                 $factor      Scale factor applied to grid values
 #
 #   Returns:      
 #
 #===============================================================================
 
 sub new {
-  my( $class, $name ) = @_;
+  my( $class, $name, $factor ) = @_;
   my $grid = new LINZ::Geodetic::Util::GridFile $name;
   die "Invalid geoid grid $name - wrong data dimension\n" if $grid->Dimension != 1;
   my $cscode = $grid->CrdSysCode;
@@ -59,6 +60,7 @@ sub new {
         titles=>\@titles,
         required_cscode=>$cscode,
         grid=>$grid,
+        factor=>$factor,
         };
   return bless $self, $class;
   }
@@ -96,7 +98,7 @@ sub GeoidHeight {
   if( $@ ) {
      die "Coordinates out of range for calculating geoid height\n";
      }
-  return $ghgt;
+  return $ghgt * $self->{factor};
   }
    
 

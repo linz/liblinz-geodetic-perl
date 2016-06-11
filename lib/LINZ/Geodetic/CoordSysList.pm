@@ -140,12 +140,11 @@ sub GetCoordSys
 
 sub new
 {
-    my ( $class, $elldefs, $dtmdefs, $csdefs, $hrfdefs, $hcsdefs ) = @_;
+    my ( $class, $elldefs, $dtmdefs, $csdefs, $hrfdefs ) = @_;
     my $ellipsoids = {};
     my $datums     = {};
     my $crdsystems = {};
     my $hgtrefs    = {};
-    my $hgtcrdsys  = {};
 
     if ($elldefs)
     {
@@ -175,20 +174,12 @@ sub new
             $hgtrefs->{$_} = { code => $_, def => $hrfdefs->{$_} };
         }
     }
-    if ($hcsdefs)
-    {
-        foreach ( keys %$hcsdefs )
-        {
-            $hgtcrdsys->{$_} = { code => $_, def => $hcsdefs->{$_} };
-        }
-    }
 
     my $self = {
         ellipsoids => $ellipsoids,
         datums     => $datums,
         crdsystems => $crdsystems,
         hgtrefs    => $hgtrefs,
-        hgtcrdsys  => $hgtcrdsys
     };
     return bless $self, $class;
 }
@@ -236,7 +227,7 @@ sub newFromCoordSysDef
     my $datums     = {};
     my $crdsystems = {};
     my $hgtrefs    = {};
-    my $hgtcrdsys  = {};
+    my $hgtrefs2   = {};
     my $list;
 
     while (<CSFILE>)
@@ -262,29 +253,38 @@ sub newFromCoordSysDef
                 {
                     $list = $crdsystems;
                 }
-                elsif ( $section eq 'HEIGHT_REFERENCES' )
+                elsif ( $section eq 'HEIGHT_REFERENCE_SURFACES' || $section eq 'HEIGHT_REFERENCES' )
                 {
                     $list = $hgtrefs;
                 }
+                # Handling of deprecated height surfaces reference 
                 elsif ( $section eq 'HEIGHT_COORDINATE_SYSTEMS' )
                 {
-                    $list = $hgtcrdsys;
+                    $list = $hgtrefs2;
                 }
             }
             next;
         }
         next if !$list;
+        # Handle continuation lines
         while (/(\&|\\)$/)
         {
             $_ = $` . <CSFILE>;
             s/\s*$//;
         }
-        $list->{ uc($1) } = $' if /^\s*(\S+)\s*/;
+        next if ! /^\s*(\S+)\s+(\S.*?)\s*$/;
+        $list->{uc($1)} = $2;
     }
     close(CSFILE);
 
+    # Handling of deprecated height surfaces reference 
+    foreach my $k (keys %$hgtrefs2)
+    {
+        $hgtrefs->{$k} = $hgtrefs2->{$k} if ! exists $hgtrefs->{$k};
+    }
+
     my $self =
-      new( $class, $ellipsoids, $datums, $crdsystems, $hgtrefs, $hgtcrdsys );
+      new( $class, $ellipsoids, $datums, $crdsystems, $hgtrefs );
 
     $self->{filename} = $filename;
 
@@ -295,7 +295,7 @@ sub newFromCoordSysDef
 #
 #   Method:       definitions
 #
-#   Description:  ($elldef,$dtmdef,$csdef,$hrdef,$hcsdef) = $cslist->definitions;
+#   Description:  ($elldef,$dtmdef,$csdef,$hrdef) = $cslist->definitions;
 #
 #   Parameters:   None
 #
@@ -307,7 +307,7 @@ sub newFromCoordSysDef
 sub definitions
 {
     my ($self) = @_;
-    my ( %elldef, %dtmdef, %csdef, %hrdef, %hcsdef );
+    my ( %elldef, %dtmdef, %csdef, %hrdef );
     foreach ( values %{ $self->{ellipsoids} } )
     {
         $elldef{ $_->{code} } = $_->{def};
@@ -321,10 +321,7 @@ sub definitions
     foreach ( values %{ $self->{hgtrefs} } ) {
         $hrdef{ $_->{code} } = $_->{def};
     }
-    foreach ( values %{ $self->{hgtcrdsys} } ) {
-        $hcsdef{ $_->{code} } = $_->{def};
-    }
-    return ( \%elldef, \%dtmdef, \%csdef, \%hrdef, \%hcsdef );
+    return ( \%elldef, \%dtmdef, \%csdef, \%hrdef );
 }
 
 #===============================================================================
@@ -677,116 +674,113 @@ sub coordsysname
 #
 #   Parameters:   $hrfcode    The code of the height reference required
 #
-#   Returns:      Returns a HgtRef object
+#   Returns:      Returns a HgtRefSurface object
 #
+#   Additional parameters for use only within this routine
+#      $nameonly   if true then find the name and exit
+#      $used       codes already used in defining the surface, manages 
+#                  circular references
 #===============================================================================
 
 sub hgtref
 {
-    my ( $self, $hrfcode ) = @_;
+    my ( $self, $hrfcode, $nameonly, $used ) = @_;
     $hrfcode = uc($hrfcode);
     my $hrfdef = $self->{hgtrefs}->{$hrfcode};
-    die "Invalid height reference code $hrfcode.\n" if !defined $hrfdef;
+    if( ! defined($hrfdef) )
+    {
+        my $usedmsg=$used ? " in definition of ".$used->[-1] : "";
+        die "Invalid height reference surface code $hrfcode$usedmsg.\n"
+    }
     my $hrf = $hrfdef->{object};
     if ( !$hrf )
     {
-        die "Invalid definition of height reference $hrfcode.\n"
-          if $hrfdef->{def} !~ /^\"([^\"]+)\"\s+(\S+)\s+geoid\s+(\S+)\s*$/i;
-        my ( $name, $refcscode, $geoidfile ) = ( $1, $2, $3 );
+        die "Invalid definition of height reference surface $hrfcode.\n"
+          if $hrfdef->{def} !~ 
+            /^
+            \"([^\"]+)\"\s+
+            (\S+)\s+
+            (?:
+            (geoid|grid)\s+(\S+)|
+            ([+-]?\d+(?:\.\d+)?)
+            )
+            \s*$
+            /ix;
+        my ( $name, $refcscode, $gridtype, $geoidfile, $offset ) = 
+           ( $1, uc($2), coalesce($3,''), coalesce($4,''), coalesce($5,0.0)+0.0 );
+        return $name if $nameonly;
+        my $hrefbase;
         my $refcrdsys;
         eval { $refcrdsys = $self->coordsys($refcscode); };
-        die "Invalid coordinate system code in height reference $hrfcode.\n"
-          if !$refcrdsys;
-        if ( $self->{filename} )
+        undef $refcrdsys if defined($refcrdsys) && $refcrdsys->type != &LINZ::Geodetic::GEODETIC;
+        if( ! defined($refcrdsys))
         {
-            my ($filepath) = $self->{filename} =~ /^(.*[\\\/])/;
-            $geoidfile = $filepath . $geoidfile if -r $filepath . $geoidfile;
-            $geoidfile = $filepath . $geoidfile . '.grd'
-              if -r $filepath . $geoidfile . '.grd';
+            $used ||= [];
+            push(@$used,$hrfcode);
+            foreach my $usedrf (@$used)
+            {
+                die "Circular reference in definition of height reference surface $refcscode\n"
+                    if $usedrf eq $refcscode;
+            }
+            $hrefbase=$self->hgtref( $refcscode, 0, $used );
+            $refcrdsys=$hrefbase->refcrdsys();
         }
-        require LINZ::Geodetic::GeoidGrid;
+        die "Invalid coordinate system code in height reference surface $hrfcode.\n"
+          if !$refcrdsys;
         my $gridfunc;
-        eval { $gridfunc = new LINZ::Geodetic::GeoidGrid($geoidfile); };
-        die "Invalid geoid grid specified for height reference $hrfcode.\n"
-          if !$gridfunc;
+        if( $geoidfile )
+        {
+            if ( $self->{filename} )
+            {
+                my ($filepath) = $self->{filename} =~ /^(.*[\\\/])/;
+                $geoidfile = $filepath . $geoidfile if -r $filepath . $geoidfile;
+                $geoidfile = $filepath . $geoidfile . '.grd'
+                  if -r $filepath . $geoidfile . '.grd';
+            }
+            require LINZ::Geodetic::GeoidGrid;
+            my $factor=uc($gridtype) eq 'GEOID' ? 1.0 : -1.0;
+            eval { $gridfunc = new LINZ::Geodetic::GeoidGrid($geoidfile,$factor); };
+            die "Invalid grid specified for height reference surface $hrfcode.\n"
+              if !$gridfunc;
+        }
+        else
+        {
+            require LINZ::Geodetic::HgtRefSurface;
+            $gridfunc=LINZ::Geodetic::HgtRefSurface::Offset->new($offset);
+        }
 
-        require LINZ::Geodetic::HgtRef;
+        require LINZ::Geodetic::HgtRefSurface;
         $hrfdef->{object} = $hrf =
-          new LINZ::Geodetic::HgtRef( $name, $refcrdsys, $gridfunc, $hrfcode );
+          new LINZ::Geodetic::HgtRefSurface( $name, $hrefbase, $refcrdsys, $gridfunc, $hrfcode );
     }
     return $hrf;
 }
 
 #===============================================================================
 #
-#   Method:       hgtcrdsys
+#   Method:       hgtrefname
 #
-#   Description:  $hgtcrdsys = $cslist->hgtcrdsys($hcscode)
+#   Description:  Routine provides a cheap look up of the height reference surface name
+#                 system name - avoiding loading the coordinate system
+#                  $hrfname = $cslist->hgtrefname($hrfcode)
 #
-#   Parameters:   $hcscode    The code of the height reference required
+#   Parameters:   $hrfcode     The code of the coordinate system required
 #
-#   Returns:      Returns a HgtCrdSys object
+#   Returns:      $hrfname     The name of the coordinate system
 #
 #===============================================================================
 
-sub hgtcrdsys
+sub hgtrefname
 {
-    my ( $self, $hcscode ) = @_;
-    $hcscode = uc($hcscode);
-    my $hcsdef = $self->{hgtcrdsys}->{$hcscode};
-    die "Invalid height coordinate system code $hcscode.\n" if !defined $hcsdef;
-    my $hcs = $hcsdef->{object};
-    if ( !$hcs )
-    {
-        die "Invalid definition of height reference $hcscode.\n"
-          if $hcsdef->{def} !~ /^\"([^\"]+)\"\s+(\S+)\s+([+-]?\d+\.?\d*)\s*$/;
-        my ( $name, $hrfcode, $offset ) = ( $1, $2, $3 );
-        my $hrf;
-        eval { $hrf = $self->hgtref($hrfcode); };
-        if ($@)
-        {
-            die $@
-              . "Invalid height reference $hrfcode specified for height coordinate system $hcscode.\n";
-        }
-        require LINZ::Geodetic::HgtCrdSys;
-        $hcsdef->{object} = $hcs =
-          new LINZ::Geodetic::HgtCrdSys( $name, $hrf, $offset, $hcscode );
-    }
-    return $hcs;
+    my ( $self, $hrfcode ) = @_;
+    return $self->hgtref($hrfcode,1);
 }
 
-#===============================================================================
-#
-#   Method:       hgtcrdsysname
-#
-#   Description:  Routine provides a cheap look up of the height coordinate
-#                 system name - avoiding loading the coordinate system
-#                  $hcsname = $cslist->hgtcrdsysname($hcscode)
-#
-#   Parameters:   $hcscode     The code of the coordinate system required
-#
-#   Returns:      $hcsname     The name of the coordinate system
-#
-#===============================================================================
-
+# Deprecated
 sub hgtcrdsysname
 {
     my ( $self, $hcscode ) = @_;
-    $hcscode = uc($hcscode);
-    my $hcsdef = $self->{hgtcrdsys}->{$hcscode};
-    die "Invalid height coordinate system code $hcscode.\n" if !$hcsdef;
-    my $hcs = $hcsdef->{object};
-    return $hcs->{name} if $hcs;
-    die "Invalid definition of coordinate system $hcscode.\n"
-      if $hcsdef->{def} !~ /^
-                         \"([^\"]+)\"\s+
-                         (\S+)\s+
-                         ([+-]?\d+(?:\.\d+)?)
-                         \s*$
-                        /xi;
-
-    my $name = $1;
-    return $name;
+    return $self->hgtrefname($hcscode);
 }
 
 1;

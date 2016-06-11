@@ -135,7 +135,6 @@ sub Setup {
 
    # Format of each row ..
 
-
    my $rowfmt = $self->GetRowFormat($fmt);
    
    # Read location in the file of the grid index data

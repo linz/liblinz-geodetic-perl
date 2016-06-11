@@ -1,0 +1,127 @@
+#!/usr/bin/perl
+
+use strict;
+use POSIX;
+use Getopt::Std;
+use LINZ::Geodetic::CoordSysList;
+
+my $syntax=<<EOT;
+Simple coordinate conversion program to test perl coordinate system lists
+
+Syntax: convert_coords [options] coordsys_from coordsys_to input_file output_file
+
+Coordinate systems defined as cscode(+hgtrefcode), eg NZGD2000, NZTM+NZVD09
+Data is all white space separated
+Input file contains id lat lon hgt (date)
+Output file contains id lat lon hgt (date)
+
+
+Options:
+  -d date (formatted as yyyy-mm-dd, or yyyy.yyy)  Alternative to date column
+  -D                 No dates specified 
+  -c coordsys.def    Alternative coordinate system definition file
+  -l                 List coordinate systems and exit
+  -L                 List height reference surfaces and exit
+
+EOT
+
+my %opts;
+getopts('lLDd:c:',\%opts);
+
+my $csdef=$opts{c};
+my $crddate=$opts{d};
+my $usedate=! $opts{D};
+
+my $cslist=LINZ::Geodetic::CoordSysList->newFromCoordSysDef($csdef);
+if( $opts{l} )
+{
+    my($elldef,$dtmdef,$csdef,$hrdef)=$cslist->definitions();
+    foreach my $k (sort keys %$csdef )
+    {
+        printf "%-16s %s\n", $k, $cslist->coordsysname($k);
+    }
+    exit();
+}
+
+if( $opts{L} )
+{
+    my($elldef,$dtmdef,$csdef,$hrdef)=$cslist->definitions();
+    foreach my $k (sort keys %$hrdef )
+    {
+        printf "%-16s %s\n", $k, $cslist->hgtrefname($k);
+    }
+    exit();
+}
+
+
+@ARGV==4 || die $syntax;
+my ($incsdef,$outcsdef,$indata,$outdata) = @ARGV;
+
+my ($incs,$inhgtdef)=getCoordSys($incsdef,$cslist);
+my ($outcs,$outhgtdef)=getCoordSys($outcsdef,$cslist);
+my $inswap=$incs->type ne LINZ::Geodetic::CARTESIAN;
+my $outswap=$outcs->type ne LINZ::Geodetic::CARTESIAN;
+my $ndp=$outcs->type eq LINZ::Geodetic::GEODETIC ? 9 : 4;
+
+open( my $if, "<" ,$indata ) || die "Cannot open input file $indata\n";
+open( my $of, ">" ,$outdata ) || die "Cannot open output file $outdata\n";
+
+while(my $line=<$if>)
+{
+    next if $line =~ /^\s*(\#|$)/;
+    my ($id,$c0,$c1,$c2,$y)=split(' ',$line);
+    next if $c1 eq '';
+    eval
+    {
+        if( $inswap ){ my $ctmp=$c1; $c1=$c0; $c0=$ctmp; }
+        my $crd=$incs->coord($c0,$c1,$c2);
+        if( $usedate )
+        {
+            $y=$crddate || $y;
+            $crd->setepoch(parseDate($y));
+        }
+        $crd=$inhgtdef->set_ellipsoidal_height($crd,$c2) if $inhgtdef;
+        $crd=$crd->as($outcs);
+        ($c0,$c1,$c2)=@$crd;
+        if( $outswap ){ my $ctmp=$c1; $c1=$c0; $c0=$ctmp; }
+        if( $outhgtdef ){ $c2=$outhgtdef->get_orthometric_height($crd);}
+        printf $of "%s %.*f %.*f %.4f",$id,$ndp,$c0,$ndp,$c1,$c2;
+        print $of $y if $usedate;
+        print $of "\n"
+    };
+    if( $@ )
+    {
+        print "Error: $@";
+    }
+}
+
+sub getCoordSys
+{
+    my ($code,$cslist)=@_;
+    my($ecs,$hcs)=split(/\+/,$code);
+    my $cs=$cslist->coordsys($ecs);
+    die "Invalid coordinate system $ecs\n" if ! $cs;
+
+    my $hgtref;
+    if( $hcs )
+    {
+        $hgtref=$cslist->hgtref($hcs);
+        die "Invalid height reference surface $hcs\n" if ! $hgtref;
+    }
+    return ($cs,$hgtref);
+}
+
+sub parseDate
+{
+    my($date)=@_;
+    $date=~s/\s//g;
+    return $date+0.0 if $date=~/^\d\d\d\d(\.\d+)?$/;
+    die "Invalid date $date\n" if $date !~ /^(\d\d\d\d)\W([01]?\d)\W([0123]?\d)$/;
+    my ($y,$m,$d)=($1,$2,$3);
+    my $td=POSIX::mktime(0,0,0,$d,$m-1,$y-1900);
+    my $t0=POSIX::mktime(0,0,0,1,0,$y-1900);
+    my $t1=POSIX::mktime(0,0,0,1,0,($y+1)-1900);
+    return $y+($td-$t0)/($t1-$t0);
+}
+
+
