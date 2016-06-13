@@ -676,7 +676,7 @@ sub coordsysname
 #
 #   Returns:      Returns a HgtRefSurface object
 #
-#   Additional parameters for use only within this routine
+#   Additional parameters for use only within this module
 #      $nameonly   if true then find the name and exit
 #      $used       codes already used in defining the surface, manages 
 #                  circular references
@@ -693,6 +693,10 @@ sub hgtref
         die "Invalid height reference surface code $hrfcode$usedmsg.\n"
     }
     my $hrf = $hrfdef->{object};
+    if( $hrf && $nameonly )
+    {
+        return $hrf->name;
+    }
     if ( !$hrf )
     {
         die "Invalid definition of height reference surface $hrfcode.\n"
@@ -774,13 +778,6 @@ sub hgtrefname
 {
     my ( $self, $hrfcode ) = @_;
     return $self->hgtref($hrfcode,1);
-}
-
-# Deprecated
-sub hgtcrdsysname
-{
-    my ( $self, $hcscode ) = @_;
-    return $self->hgtrefname($hcscode);
 }
 
 1;
