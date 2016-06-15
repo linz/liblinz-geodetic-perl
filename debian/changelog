@@ -1,3 +1,10 @@
+liblinz-geodetic-perl (2.8.0-1) trusty; urgency=medium
+
+  * Refactoring height reference systems
+  * Bug fix in getting height reference system name
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Wed, 15 Jun 2016 15:30:38 +1200
+
 liblinz-geodetic-perl (2.7.0-1) trusty; urgency=medium
 
   * Adding simplistic grid format conversion
