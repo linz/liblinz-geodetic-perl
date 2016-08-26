@@ -1,3 +1,9 @@
+liblinz-geodetic-perl (2.8.1-1) trusty; urgency=medium
+
+  * Fixing bug handling height reference surfaces when not in geoid coordinate system
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Fri, 26 Aug 2016 17:03:59 +1200
+
 liblinz-geodetic-perl (2.8.0-1) trusty; urgency=medium
 
   * Refactoring height reference systems
