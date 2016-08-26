@@ -142,7 +142,7 @@ sub id { return $_[0]->{id} }
 sub get_orthometric_height {
    my( $self, $crd ) = @_;
    my $rcrd = $crd->as( $self->refcrdsys );
-   my $ohgt=$crd->hgt;
+   my $ohgt=$rcrd->hgt;
    my $hgtref=$self;
    while( $hgtref )
    {

@@ -189,7 +189,7 @@ LINZ::Geodetic - modules for geodetic calculations
     my $href=$cslist->hgtref($hgtrefcode);
     my $hrefname=$cslist->hgtrefname($hgtrefcode);
     my $ohgt=$href->get_orthometric_height($crd);
-    $href->set_ellipsoidal_height($crd,$ohgt);
+    my $crd2=$href->set_ellipsoidal_height($crd,$ohgt);
     $href->convert_orthometric_height($hrefnew,$crd,$ohgt);
 
 
