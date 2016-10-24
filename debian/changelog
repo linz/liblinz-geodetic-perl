@@ -1,3 +1,10 @@
+liblinz-geodetic-perl (2.9.0-1) trusty; urgency=medium
+
+  * Updating MANIFEST
+  * Adding optional "offset" keyword to height reference surface definition
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Tue, 25 Oct 2016 11:50:50 +1300
+
 liblinz-geodetic-perl (2.8.1-1) trusty; urgency=medium
 
   * Fixing bug handling height reference surfaces when not in geoid coordinate system
