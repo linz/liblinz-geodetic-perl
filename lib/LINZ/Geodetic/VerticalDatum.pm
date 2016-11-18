@@ -1,29 +1,29 @@
 #===============================================================================
-# Module:             HgtRefSurface.pm
+# Module:             VerticalDatum.pm
 #
-# Description:       Defines a basic hgtref object.  This is a blessed
+# Description:       Defines a basic vdatum object.  This is a blessed
 #                    hash reference with elements:
-#                       name       The hgtref name
+#                       name       The vdatum name
 #                       ellipsoid  The ellipsoid object defined for the frame
-#                       baseref    The base hgtref
+#                       baseref    The base vdatum
 #                       transfunc  A function object for converting coordinates
-#                                  to and from the base hgtref.
+#                                  to and from the base vdatum.
 #
 #                    The CoordSys module may install additional entries into
 #                    this hash, which are
 #                       _csgeod    The geodetic (lat/lon) coordinate system
-#                                  for the hgtref
+#                                  for the vdatum
 #                       _cscart    The cartesian coordinate system for the
-#                                  hgtref
+#                                  vdatum
 #                       
 #                    Defines packages: 
-#                      LINZ::Geodetic::HgtRefSurface
+#                      LINZ::Geodetic::VerticalDatum
 #
 # Dependencies:      Uses the following modules:   
 #
-#  $Id: HgtRefSurface.pm,v 1.1 2005/11/27 19:39:30 gdb Exp $
+#  $Id: VerticalDatum.pm,v 1.1 2005/11/27 19:39:30 gdb Exp $
 #
-#  $Log: HgtRefSurface.pm,v $
+#  $Log: VerticalDatum.pm,v $
 #  Revision 1.1  2005/11/27 19:39:30  gdb
 #  *** empty log message ***
 #
@@ -35,13 +35,13 @@ use strict;
    
 #===============================================================================
 #
-#   Class:       LINZ::Geodetic::HgtRefSurface::Offset
+#   Class:       LINZ::Geodetic::VerticalDatum::Offset
 #
 #   Description: Defines the offset of a height reference surface
 #
 #===============================================================================
 
-package LINZ::Geodetic::HgtRefSurface::Offset;
+package LINZ::Geodetic::VerticalDatum::Offset;
 
 sub new
 {
@@ -70,16 +70,16 @@ sub OrthometricHeight {
    
 #===============================================================================
 #
-#   Class:       LINZ::Geodetic::HgtRefSurface
+#   Class:       LINZ::Geodetic::VerticalDatum
 #
 #   Description: Defines the following routines:
-#                 $hgtref = new LINZ::Geodetic::HgtRefSurface($name, $refcrdsys, $transfunc, $code )
+#                 $vdatum = new LINZ::Geodetic::VerticalDatum($name, $refcrdsys, $transfunc, $code )
 #
-#                  $name = $hgtref->name
+#                  $name = $vdatum->name
 #
 #===============================================================================
 
-package LINZ::Geodetic::HgtRefSurface;
+package LINZ::Geodetic::VerticalDatum;
 
 my $id;
 
@@ -87,10 +87,10 @@ my $id;
 #
 #   Method:       new
 #
-#   Description:  $hgtref = new LINZ::Geodetic::HgtRefSurface($name, $refcrdsys, $transfunc, $code )
+#   Description:  $vdatum = new LINZ::Geodetic::VerticalDatum($name, $refcrdsys, $transfunc, $code )
 #
-#   Parameters:   $name       The name of the hgtref
-#                 $refhgtref  The reference surface that this is defined in terms of
+#   Parameters:   $name       The name of the vdatum
+#                 $refvdatum  The reference surface that this is defined in terms of
 #                             (if it is not in terms of the refcrdsys)
 #                 $refcrdsys  Reference ellipsoidal coordinate system for
 #                             conversions
@@ -98,16 +98,16 @@ my $id;
 #                             EllipsoidalHeight, and GeoidHeight, which convert 
 #                             base reference system heights to and from the 
 #                             height reference system 
-#                 $code       Optional code identifying the hgtref
+#                 $code       Optional code identifying the vdatum
 #
-#   Returns:      $hgtref   The blessed ref frame hash
+#   Returns:      $vdatum   The blessed ref frame hash
 #
 #===============================================================================
 
 sub new {
-  my ($class, $name, $basehgtref, $refcrdsys, $transfunc, $code ) = @_;
+  my ($class, $name, $basevdatum, $refcrdsys, $transfunc, $code ) = @_;
   my $self = { name=>$name, 
-               basehgtref=>$basehgtref,
+               basevdatum=>$basevdatum,
                refcrdsys=>$refcrdsys,
                transfunc=>$transfunc,
                code=>$code,
@@ -119,7 +119,7 @@ sub new {
 
 sub name { return $_[0]->{name} }
 sub code { return $_[0]->{code} }
-sub basehgtref { return $_[0]->{basehgtref}  }
+sub basevdatum { return $_[0]->{basevdatum}  }
 sub refcrdsys { return $_[0]->{refcrdsys}  }
 sub transfunc { return $_[0]->{transfunc} }
 sub id { return $_[0]->{id} }
@@ -143,11 +143,11 @@ sub get_orthometric_height {
    my( $self, $crd ) = @_;
    my $rcrd = $crd->as( $self->refcrdsys );
    my $ohgt=$rcrd->hgt;
-   my $hgtref=$self;
-   while( $hgtref )
+   my $vdatum=$self;
+   while( $vdatum )
    {
-       $ohgt = $hgtref->transfunc->OrthometricHeight( $rcrd, $ohgt );
-       $hgtref=$hgtref->basehgtref;
+       $ohgt = $vdatum->transfunc->OrthometricHeight( $rcrd, $ohgt );
+       $vdatum=$vdatum->basevdatum;
    }
    return $ohgt;
    }
@@ -169,11 +169,11 @@ sub get_orthometric_height {
 sub set_ellipsoidal_height {
    my( $self, $crd, $ohgt ) = @_;
    my $rcrd = $crd->as( $self->refcrdsys );
-   my $hgtref=$self;
-   while( $hgtref )
+   my $vdatum=$self;
+   while( $vdatum )
    {
-       $ohgt = $hgtref->transfunc->EllipsoidalHeight( $rcrd, $ohgt );
-       $hgtref=$hgtref->basehgtref;
+       $ohgt = $vdatum->transfunc->EllipsoidalHeight( $rcrd, $ohgt );
+       $vdatum=$vdatum->basevdatum;
    }
    $rcrd->[2] = $ohgt;
    return $rcrd->as( $crd->coordsys );
@@ -194,9 +194,9 @@ sub set_ellipsoidal_height {
 #===============================================================================
 
 sub convert_orthometric_height_to {
-   my( $self, $hrfnew, $crd, $ohgt ) = @_;
+   my( $self, $vdnew, $crd, $ohgt ) = @_;
    my $rcrd = $self->set_ellipsoidal_height( $crd, $ohgt );
-   $ohgt = $hrfnew->get_orthometric_height( $rcrd );
+   $ohgt = $vdnew->get_orthometric_height( $rcrd );
    return $ohgt;
    }
 

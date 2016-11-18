@@ -181,15 +181,16 @@ LINZ::Geodetic - modules for geodetic calculations
     my $string = $coord->asstring($ndp); # ndp = no decimal places
     my($x,$y,$z) = ($coord->X, $coord->Y, $coord->Z );
 
-    # Height reference surfaces defined by transformation from ellipsoidal heights
-    # In a reference coordinate system.  Note: the use of "orthometric"
-    # here is not technically correct!  These are ellipsoidal heights 
-    # calculated relative to a gridded reference surface.
+    # Vertical datums define transformation from ellipsoidal heights
+    # to orthometric heights in a reference coordinate system.  
+    # Note: the use of "orthometric" here is not technically correct!  
+    # These are ellipsoidal heights calculated relative to a 
+    # gridded reference surface.
     
-    my $href=$cslist->hgtref($hgtrefcode);
-    my $hrefname=$cslist->hgtrefname($hgtrefcode);
-    my $ohgt=$href->get_orthometric_height($crd);
-    my $crd2=$href->set_ellipsoidal_height($crd,$ohgt);
-    $href->convert_orthometric_height($hrefnew,$crd,$ohgt);
+    my $vd=$cslist->vdatum($vdatumcode);
+    my $vdname=$cslist->vdatumname($vdatumcode);
+    my $ohgt=$vd->get_orthometric_height($crd);
+    my $crd2=$vd->set_ellipsoidal_height($crd,$ohgt);
+    $vd->convert_orthometric_height($vdnew,$crd,$ohgt);
 
 

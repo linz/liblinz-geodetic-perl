@@ -54,7 +54,7 @@ use strict;
 #                   ellipsoids   Hash storing ellipsoid definitions
 #                   datums       Hash storing datum definitions
 #                   crdsystems   Hash storing crdsystem definitions
-#                   heightref    Hash storing height reference system definitions
+#                   vdatums      Hash storing vertical datum definitions
 #                   heightcoord  Hash storing height coordinate systems definitions
 #                 The definitions are stored in hashes indexed by the
 #                 the codes for the objects.  Each hash value is itself
@@ -72,8 +72,8 @@ use strict;
 #                  $datum = $cslist->datum($dtmcode)
 #                  $cs = $cslist->coordsys($cscode)
 #                  $csname =$cslist->coordsysname($cscode)
-#                  $heightref=$cslist->heightref($hrcode);
-#                  $heightcoord=$cslist->heightcoord($hrcode);
+#                  $vdatums =$cslist->vdatums($vdcode);
+#                  $heightcoord=$cslist->heightcoord($vdcode);
 #
 #===============================================================================
 
@@ -140,11 +140,11 @@ sub GetCoordSys
 
 sub new
 {
-    my ( $class, $elldefs, $dtmdefs, $csdefs, $hrfdefs ) = @_;
+    my ( $class, $elldefs, $dtmdefs, $csdefs, $vddefs ) = @_;
     my $ellipsoids = {};
     my $datums     = {};
     my $crdsystems = {};
-    my $hgtrefs    = {};
+    my $vdatums    = {};
 
     if ($elldefs)
     {
@@ -167,11 +167,11 @@ sub new
             $crdsystems->{$_} = { code => $_, def => $csdefs->{$_} };
         }
     }
-    if ($hrfdefs)
+    if ($vddefs)
     {
-        foreach ( keys %$hrfdefs )
+        foreach ( keys %$vddefs )
         {
-            $hgtrefs->{$_} = { code => $_, def => $hrfdefs->{$_} };
+            $vdatums->{$_} = { code => $_, def => $vddefs->{$_} };
         }
     }
 
@@ -179,7 +179,7 @@ sub new
         ellipsoids => $ellipsoids,
         datums     => $datums,
         crdsystems => $crdsystems,
-        hgtrefs    => $hgtrefs,
+        vdatums    => $vdatums,
     };
     return bless $self, $class;
 }
@@ -226,8 +226,8 @@ sub newFromCoordSysDef
     my $ellipsoids = {};
     my $datums     = {};
     my $crdsystems = {};
-    my $hgtrefs    = {};
-    my $hgtrefs2   = {};
+    my $vdatums    = {};
+    my $vdatums2   = {};
     my $list;
 
     while (<CSFILE>)
@@ -253,14 +253,18 @@ sub newFromCoordSysDef
                 {
                     $list = $crdsystems;
                 }
-                elsif ( $section eq 'HEIGHT_REFERENCE_SURFACES' || $section eq 'HEIGHT_REFERENCES' )
+                elsif ( $section eq 'VERTICAL_DATUMS' )
                 {
-                    $list = $hgtrefs;
+                    $list = $vdatums;
                 }
                 # Handling of deprecated height surfaces reference 
+                elsif ( $section eq 'HEIGHT_REFERENCE_SURFACES' || $section eq 'HEIGHT_REFERENCES' )
+                {
+                    $list = $vdatums;
+                }
                 elsif ( $section eq 'HEIGHT_COORDINATE_SYSTEMS' )
                 {
-                    $list = $hgtrefs2;
+                    $list = $vdatums2;
                 }
             }
             next;
@@ -278,13 +282,13 @@ sub newFromCoordSysDef
     close(CSFILE);
 
     # Handling of deprecated height surfaces reference 
-    foreach my $k (keys %$hgtrefs2)
+    foreach my $k (keys %$vdatums2)
     {
-        $hgtrefs->{$k} = $hgtrefs2->{$k} if ! exists $hgtrefs->{$k};
+        $vdatums->{$k} = $vdatums2->{$k} if ! exists $vdatums->{$k};
     }
 
     my $self =
-      new( $class, $ellipsoids, $datums, $crdsystems, $hgtrefs );
+      new( $class, $ellipsoids, $datums, $crdsystems, $vdatums );
 
     $self->{filename} = $filename;
 
@@ -318,7 +322,7 @@ sub definitions
     foreach ( values %{ $self->{crdsystems} } ) {
         $csdef{ $_->{code} } = $_->{def};
     }
-    foreach ( values %{ $self->{hgtrefs} } ) {
+    foreach ( values %{ $self->{vdatums} } ) {
         $hrdef{ $_->{code} } = $_->{def};
     }
     return ( \%elldef, \%dtmdef, \%csdef, \%hrdef );
@@ -668,13 +672,13 @@ sub coordsysname
 
 #===============================================================================
 #
-#   Method:       hgtref
+#   Method:       vdatum
 #
-#   Description:  $hgtref = $cslist->hgtref($hrfcode)
+#   Description:  $vdatum = $cslist->vdatum($vdcode)
 #
-#   Parameters:   $hrfcode    The code of the height reference required
+#   Parameters:   $vdcode    The code of the vertical datum required
 #
-#   Returns:      Returns a HgtRefSurface object
+#   Returns:      Returns a VerticalDatum object
 #
 #   Additional parameters for use only within this module
 #      $nameonly   if true then find the name and exit
@@ -682,25 +686,25 @@ sub coordsysname
 #                  circular references
 #===============================================================================
 
-sub hgtref
+sub vdatum
 {
-    my ( $self, $hrfcode, $nameonly, $used ) = @_;
-    $hrfcode = uc($hrfcode);
-    my $hrfdef = $self->{hgtrefs}->{$hrfcode};
-    if( ! defined($hrfdef) )
+    my ( $self, $vdcode, $nameonly, $used ) = @_;
+    $vdcode = uc($vdcode);
+    my $vddef = $self->{vdatums}->{$vdcode};
+    if( ! defined($vddef) )
     {
         my $usedmsg=$used ? " in definition of ".$used->[-1] : "";
-        die "Invalid height reference surface code $hrfcode$usedmsg.\n"
+        die "Invalid vertical datum code $vdcode$usedmsg.\n"
     }
-    my $hrf = $hrfdef->{object};
-    if( $hrf && $nameonly )
+    my $vd = $vddef->{object};
+    if( $vd && $nameonly )
     {
-        return $hrf->name;
+        return $vd->name;
     }
-    if ( !$hrf )
+    if ( !$vd )
     {
-        die "Invalid definition of height reference surface $hrfcode.\n"
-          if $hrfdef->{def} !~ 
+        die "Invalid definition of vertical datum $vdcode.\n"
+          if $vddef->{def} !~ 
             /^
             \"([^\"]+)\"\s+
             (\S+)\s+
@@ -720,16 +724,16 @@ sub hgtref
         if( ! defined($refcrdsys))
         {
             $used ||= [];
-            push(@$used,$hrfcode);
+            push(@$used,$vdcode);
             foreach my $usedrf (@$used)
             {
-                die "Circular reference in definition of height reference surface $refcscode\n"
+                die "Circular reference in definition of vertical datum $refcscode\n"
                     if $usedrf eq $refcscode;
             }
-            $hrefbase=$self->hgtref( $refcscode, 0, $used );
+            $hrefbase=$self->vdatum( $refcscode, 0, $used );
             $refcrdsys=$hrefbase->refcrdsys();
         }
-        die "Invalid coordinate system code in height reference surface $hrfcode.\n"
+        die "Invalid coordinate system code in vertical datum $vdcode.\n"
           if !$refcrdsys;
         my $gridfunc;
         if( $geoidfile )
@@ -744,40 +748,46 @@ sub hgtref
             require LINZ::Geodetic::GeoidGrid;
             my $factor=uc($gridtype) eq 'GEOID' ? 1.0 : -1.0;
             eval { $gridfunc = new LINZ::Geodetic::GeoidGrid($geoidfile,$factor); };
-            die "Invalid grid specified for height reference surface $hrfcode.\n"
+            die "Invalid grid specified for vertical datum $vdcode.\n"
               if !$gridfunc;
         }
         else
         {
-            require LINZ::Geodetic::HgtRefSurface;
-            $gridfunc=LINZ::Geodetic::HgtRefSurface::Offset->new($offset);
+            require LINZ::Geodetic::VerticalDatum;
+            $gridfunc=LINZ::Geodetic::VerticalDatum::Offset->new($offset);
         }
 
-        require LINZ::Geodetic::HgtRefSurface;
-        $hrfdef->{object} = $hrf =
-          new LINZ::Geodetic::HgtRefSurface( $name, $hrefbase, $refcrdsys, $gridfunc, $hrfcode );
+        require LINZ::Geodetic::VerticalDatum;
+        $vddef->{object} = $vd =
+          new LINZ::Geodetic::VerticalDatum( $name, $hrefbase, $refcrdsys, $gridfunc, $vdcode );
     }
-    return $hrf;
+    return $vd;
 }
+
+# Deprecated function
+sub hgtref { return vdatum(@_); }
 
 #===============================================================================
 #
-#   Method:       hgtrefname
+#   Method:       vdatumname
 #
-#   Description:  Routine provides a cheap look up of the height reference surface name
+#   Description:  Routine provides a cheap look up of the vertical datum name
 #                 system name - avoiding loading the coordinate system
-#                  $hrfname = $cslist->hgtrefname($hrfcode)
+#                  $vdname = $cslist->vdatumname($vdcode)
 #
-#   Parameters:   $hrfcode     The code of the coordinate system required
+#   Parameters:   $vdcode     The code of the coordinate system required
 #
-#   Returns:      $hrfname     The name of the coordinate system
+#   Returns:      $vdname     The name of the coordinate system
 #
 #===============================================================================
 
-sub hgtrefname
+sub vdatumname
 {
-    my ( $self, $hrfcode ) = @_;
-    return $self->hgtref($hrfcode,1);
+    my ( $self, $vdcode ) = @_;
+    return $self->vdatum($vdcode,1);
 }
+
+# Deprecated function
+sub hgtrefname { return vdatumname(@_); }
 
 1;
