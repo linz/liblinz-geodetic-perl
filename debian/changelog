@@ -1,3 +1,9 @@
+liblinz-geodetic-perl (2.11.0-1) xenial; urgency=medium
+
+  * Adding support for coordinate system aliases
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Fri, 09 Jun 2017 10:43:42 +1200
+
 liblinz-geodetic-perl (2.9.0-1) trusty; urgency=medium
 
   * Updating MANIFEST
