@@ -1,0 +1,20 @@
+NZGD2000:NZTM               0    test1 G:P
+NZGD1949:NZMG               0    test1 G:P
+RSRGD2000:RSPS2000          0    test2 G:P
+RSRGD2000:MSLC2000          0    test2 G:P
+NZGD2000:NZGD2000_XYZ       0    test1 G:X
+NZGD2000:NZGD1949           0    test1 G:G
+NZGD2000:NZGD2000/NZVD2016  0    test1 G:G
+NZGD2000:ITRF96             2000 test1 G:G
+NZGD2000:ITRF96             2015 test1 G:G
+NZMG:WGS84_D                2000 test3 P:G
+NZMG:WGS84_D                2015 test3 P:G
+test test1
+173.5 -41.29 0.0
+176.83 -38.12 100.0
+test test2
+166.32 -77.41 24.0
+169.8  -74.43 123.0
+test test3
+2344880 5830400 43.5
+2674562 6509303 99.8
