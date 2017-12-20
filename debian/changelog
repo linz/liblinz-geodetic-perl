@@ -1,3 +1,12 @@
+liblinz-geodetic-perl (2.12.0-1) xenial; urgency=medium
+
+  * Adding metres_per_degree to Ellipsoid
+  * Making ordinate orders consistent
+  * Fixing bug with multiple datum transformation and deformation model not in first or last step
+  * Adding some rudimentary tests
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Wed, 20 Dec 2017 19:45:41 +1300
+
 liblinz-geodetic-perl (2.11.0-1) xenial; urgency=medium
 
   * Adding support for coordinate system aliases
