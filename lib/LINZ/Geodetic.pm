@@ -88,7 +88,7 @@ LINZ::Geodetic - modules for geodetic calculations
     my $xyz = $elp->xyz([$lat,$lon,$hgt]);
     my $llh = $elp->geodetic([$x,$y,$z]);
     my $llh = $elp->geog([$x,$y,$z]);
-    my ($dedln,$ndlt) = $elp->metres_per_degree($lat,$lon);
+    my ($dndlt,$dedln) = $elp->metres_per_degree($lat,$lon);
 
     # GRS80 is specifically supported ...
     use LINZ::Geodetic::Ellipsoid qw/GRS80/;

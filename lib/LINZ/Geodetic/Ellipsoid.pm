@@ -201,7 +201,7 @@ sub metres_per_degree
    my $p = $a2*$clt/$bsac + $h*$clt;
    my $dedln=$p/$rad2deg;
    my $dndlt=($a2*$b2/($bsac*$bsac*$bsac)+$h)/$rad2deg;
-   return $dedln,$dndlt;
+   return $dndlt,$dedln;
 }
 
 sub GRS80
