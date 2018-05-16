@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl 
 
 use strict;
 use POSIX;
@@ -86,7 +86,7 @@ while(my $line=<$if>)
         if( $outswap ){ my $ctmp=$c1; $c1=$c0; $c0=$ctmp; }
         if( $outvd ){ $c2=$outvd->get_orthometric_height($crd);}
         printf $of "%s %.*f %.*f %.4f",$id,$ndp,$c0,$ndp,$c1,$c2;
-        print $of $y if $usedate;
+        print $of " $y" if $usedate && ! $crddate;
         print $of "\n"
     };
     if( $@ )
