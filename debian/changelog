@@ -1,3 +1,9 @@
+liblinz-geodetic-perl (2.13.1-1) xenial; urgency=medium
+
+  * Fixing bug in setting current version
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Thu, 17 May 2018 10:34:25 +1200
+
 liblinz-geodetic-perl (2.13.0-1) xenial; urgency=medium
 
   * Addng support for version 3 of LINZ deformation model format
