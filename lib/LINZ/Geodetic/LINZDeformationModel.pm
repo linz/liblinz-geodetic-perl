@@ -182,7 +182,7 @@ sub Setup {
         print "    enddate=$enddate->{years}\n";
         printf "    range=%s\n",$range->tostring;
         print "    isgeog=$isgeog\n";
-        print "    version=$versions->{version}\n";
+        print "    version=$version->{version}\n";
         print "    versiondate=$version->{versiondate}->{years}\n";
         print "    description=$version->{description}\n";
    }
@@ -205,7 +205,7 @@ sub Setup {
    $self->SetVersion($version->{version});
    }
 
-sub SetVersion{
+sub SetVersion {
    my ($self, $version)=@_;
    my $vdef;
    foreach my $v (@{$self->{versions}})
@@ -217,7 +217,7 @@ sub SetVersion{
        }
    }
    die "Deformation model version $version\n" if ! $vdef;
-   $self->{version}=$vdef;
+   $self->{version}=$vdef->{version};
    foreach my $seq (@{$self->{sequences}} )
    {
        $seq->{enabled}=$version ge $seq->{startversion} && $version lt $seq->{endversion};
