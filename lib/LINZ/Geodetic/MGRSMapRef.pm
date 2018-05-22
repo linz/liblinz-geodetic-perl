@@ -23,7 +23,7 @@ $msband=$ms*$nrow_ms;
 
 sub gzd {
     my ($lon,$lat) = @_;
-    die "Invalid latitude for MGRS\n" if $lat < -80.0 || $lat > 84.0;
+    die sprintf("Invalid latitude %.5f for MGRS\n",$lat) if $lat < -80.0 || $lat > 84.0;
     my $lb=int(($lat+80)/8.0);
     $lb=20 if $lb > 20;
     $lb=0 if $lb < 0;
@@ -44,7 +44,6 @@ sub utmproj {
         my $cm=$zone*6.0-183.0;
         my $fn= $band lt 'N' ? 10000000.0 : 0.0;
         $utmproj{$zb} = new LINZ::Geodetic::TMProjection(GRS80,$cm,0.0,0.9996,500000.0,$fn,1.0);
-        print "PROJ: $zb: $cm $fn\n";
     }
     return $utmproj{$zb};
     }
@@ -73,15 +72,15 @@ sub write {
         my $factor=10**$ndg;
         $dig=sprintf(" %0*d %0*d",$ndg,$e*$factor,$ndg,$n*$factor);
     }
-    return $zone.$band.$ems.$nms.$dig;
+    return $zone.$band.' '.$ems.$nms.$dig;
     }
 
-sub parse_gridref {
+sub read {
     my($gridref)=@_;
     my $valid = $gridref =~ /^\s*
             ([0-6]?\d)([$lat_bands])\s*
             ([$col_ms])([$row_ms])
-            (?:\s*(\d{2,10}|\d{1,5}\s\d{1,5}))?
+            (?:\s*(\d{2,10}|\d{1,5}\s+\d{1,5}))?
             \s*$/xi;
     my ($zone,$band,$ems,$nms,$digits)=($1,$2,$3,$4,$5);
     my ($de,$dn)=split(' ',$digits);
@@ -111,7 +110,8 @@ sub parse_gridref {
     my $e=(index($col_ms,uc($ems))-$ems0)*100000.0+$de;
     my $n=(index($row_ms,uc($nms))-($zone % 2 == 0 ? 5 : 0))*100000.0+$dn;
     $n += floor(($n0-$n)/$msband+0.5)*$msband;
-    return $proj->geog([$n,$e]);
+    my $llh=$proj->geog([$n,$e]);
+    return @$llh;
 }
 
 1;
