@@ -77,6 +77,7 @@ sub write {
 
 sub read {
     my($gridref)=@_;
+    $gridref=uc($gridref);
     my $valid = $gridref =~ /^\s*
             ([0-6]?\d)([$lat_bands])\s*
             ([$col_ms])([$row_ms])
