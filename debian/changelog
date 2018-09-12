@@ -1,3 +1,9 @@
+liblinz-geodetic-perl (2.14.0-1) xenial; urgency=medium
+
+  * Adding MGRS map reference code
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Thu, 13 Sep 2018 05:56:24 +1200
+
 liblinz-geodetic-perl (2.13.1-1) xenial; urgency=medium
 
   * Fixing bug in setting current version
