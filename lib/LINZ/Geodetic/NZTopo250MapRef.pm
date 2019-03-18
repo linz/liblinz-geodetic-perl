@@ -63,7 +63,7 @@ sub write
    my( $n, $e ) = @_;
 
    my $sheet = Topo250Sheet($n,$e);
-   die "Location not on a Topo250 map sheet" if ! $sheet;
+   die "Location not on a Topo250 map sheet\n" if ! $sheet;
 
    my $nr = substr(int(($n+500)/1000),-3);
    my $er = substr(int(($e+500)/1000),-3);
