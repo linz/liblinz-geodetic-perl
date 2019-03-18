@@ -1,3 +1,9 @@
+liblinz-geodetic-perl (2.15.1-1) xenial; urgency=medium
+
+  * Fixing error message
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Tue, 19 Mar 2019 12:55:23 +1300
+
 liblinz-geodetic-perl (2.15.0-1) xenial; urgency=medium
 
   * Adding code for NZTopo250MapRef
