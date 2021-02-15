@@ -10,7 +10,8 @@ Homepage:
 
 Package: liblinz-geodetic-perl
 Architecture: all
-Depends: ${misc:Depends} libtime-modules-perl
+Depends: ${misc:Depends} 
+    libtime-modules-perl | libtime-parsedate-perl
 Description: Perl modules for LINZ geodetic coordinate system calculations
  LINZ::Geodetic perl modules
  .
