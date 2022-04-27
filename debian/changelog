@@ -1,3 +1,9 @@
+liblinz-geodetic-perl (2.15.1-2) xenial; urgency=medium
+
+  * Fixing packaging for bionic
+
+ -- Chris Crook <ccrook@linz.govt.nz>  Thu, 28 Mar 2022 09:00:00 +1300
+
 liblinz-geodetic-perl (2.15.1-1) xenial; urgency=medium
 
   * Fixing error message
