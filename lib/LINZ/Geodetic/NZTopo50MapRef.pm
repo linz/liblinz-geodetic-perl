@@ -7,7 +7,7 @@ use strict;
 
 package LINZ::Geodetic::NZTopo50MapRef;
 
-use vars qw/$ncodes $cisheets $cutsheets $sheetname/;
+use vars qw/$ncodes $cisheets $kisheets $cutsheets $sheetname/;
 
 $ncodes = 'AS AT AU AV AW AX AY AZ BA BB BC BD BE BF BG BH BJ BK BL BM BN BP BQ BR BS BT BU BV BW BX BY BZ CA CB CC CD CE CF CG CH CJ CK ';
 
@@ -20,6 +20,15 @@ $cisheets  =
     CI05=>{name=>'CI05', emin=>3506000,emax=>3530000,nmin=>5104000,nmax=>5140000},
     CI06=>{name=>'CI06', emin=>3506000,emax=>3530000,nmin=>5068000,nmax=>5104000}
     };
+
+$kisheets = 
+{
+   KI01=>{name=>'KI01',emin=>3501000, emax=>3513000, nmin=>5753000, nmax=>6771000},
+   KI02=>{name=>'KI02',emin=>3509000, emax=>3521000, nmin=>6753000, nmax=>6771000},
+   KI03=>{name=>'KI03',emin=>3454000, emax=>3466000, nmin=>6646000, nmax=>6664000},
+   KI04=>{name=>'KI04',emin=>3442000, emax=>3454000, nmin=>6610000, nmax=>6628000},
+   KI05=>{name=>'KI05',emin=>3411000, emax=>3423000, nmin=>6524000, nmax=>6642000}  
+};
 
 $cutsheets = 
 {
@@ -122,6 +131,10 @@ sub sheet {
    $sheet = &CISheet($n,$e) if $e >= 3458000 && $e <= 3530000 && $n >= 5068000 && $n <=5176000;
    if( ! $sheet )
    {
+      $sheet = &KISheet($n,$e) if $e >= 3411000 && $e <= 3521000 && $n >= 5753000 && $n <=6771000;
+   }
+   if( ! $sheet )
+   {
        die "Coordinates out of range for Topo50 map reference\n" if
           $n > 6234000 || $n < 4722000 || $e < 1084000 || $e > 2108000;
        my $ns = int( (6234000-$n)/36000 ); $ns = 41 if $ns > 41;
@@ -161,12 +174,29 @@ sub CISheet
    return '';
 }
 
+sub KISheet
+{
+   my($n,$e) = @_;
+   foreach my $sh (keys %$kisheets)
+   {
+       my $range = $kisheets->{$sh};
+       if( $e >= $range->{emin} && $e <= $range->{emax} &&
+           $n >= $range->{nmin} && $n <= $range->{nmax} )
+       {
+           return $sh;
+       }
+   }
+   return '';
+}
+
 sub extents
 {
    my($sheetname) = @_;
    $sheetname = uc($sheetname);
    my $ci = $cisheets->{$sheetname};
    return $ci if $ci;
+   my $ki = $kisheets->{$sheetname};
+   return $ki if $ki;
 
    if( $sheetname =~ /^([A-Z][A-Z])([0-4]\d|50)$/ )
    {
