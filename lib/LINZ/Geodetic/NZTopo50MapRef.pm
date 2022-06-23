@@ -23,7 +23,7 @@ $cisheets  =
 
 $kisheets = 
 {
-   KI01=>{name=>'KI01',emin=>3501000, emax=>3513000, nmin=>5753000, nmax=>6771000},
+   KI01=>{name=>'KI01',emin=>3501000, emax=>3513000, nmin=>6753000, nmax=>6771000},
    KI02=>{name=>'KI02',emin=>3509000, emax=>3521000, nmin=>6753000, nmax=>6771000},
    KI03=>{name=>'KI03',emin=>3454000, emax=>3466000, nmin=>6646000, nmax=>6664000},
    KI04=>{name=>'KI04',emin=>3442000, emax=>3454000, nmin=>6610000, nmax=>6628000},
