@@ -700,6 +700,7 @@ sub coordsysname
 sub vdatum
 {
     my ( $self, $vdcode, $nameonly, $used ) = @_;
+    return sort keys %{ $self->{vdatums} } if $vdcode eq '';
     $vdcode = uc($vdcode);
     my $vddef = $self->{vdatums}->{$vdcode};
     if( ! defined($vddef) )
