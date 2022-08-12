@@ -722,7 +722,7 @@ sub vdatum
             (\S+)\s+
             (?:
             (geoid|grid)\s+(\S+)|
-            ((?:offset\s+)?[+-]?\d+(?:\.\d+)?)
+            (?:offset\s+)?([+-]?\d+(?:\.\d+)?)
             )
             \s*$
             /ix;
