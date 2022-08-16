@@ -395,12 +395,12 @@ sub read {
           if( $components[$i]->{usebefore} == 2 )
           {
               $components[$i]->{timemodel}->[0]->[0] = 
-                 $components[$i-1]->{refdate}->{year};
+                 $components[$i-1]->{refdate}->{years};
           }
           if( $components[$i-1]->{useafter} == 2 )
           {
               $components[$i-1]->{timemodel}->[-1]->[0] = 
-                 $components[$i]->{refdate}->{year};
+                 $components[$i]->{refdate}->{years};
    
           }
       }
